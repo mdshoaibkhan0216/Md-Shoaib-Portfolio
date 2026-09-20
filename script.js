@@ -1,128 +1,80 @@
-// ========================================
-// TYPING ANIMATION
-// ========================================
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-const roles = [
-    "Diploma Student",
-    "C++ Learner",
-    "DSA Learner",
-    "Aspiring Developer"
-];
-
-const typingElement = document.querySelector(".hero h2");
-
-let roleIndex = 0;
-let charIndex = 0;
-let deleting = false;
-
-function typeEffect() {
-
-    const currentRole = roles[roleIndex];
-
-    if (!deleting) {
-        typingElement.textContent =
-            currentRole.substring(0, charIndex + 1);
-
-        charIndex++;
-
-        if (charIndex === currentRole.length) {
-            deleting = true;
-
-            setTimeout(typeEffect, 1200);
-            return;
-        }
-
-    } else {
-
-        typingElement.textContent =
-            currentRole.substring(0, charIndex - 1);
-
-        charIndex--;
-
-        if (charIndex === 0) {
-            deleting = false;
-            roleIndex = (roleIndex + 1) % roles.length;
-        }
-    }
-
-    setTimeout(typeEffect, deleting ? 60 : 100);
+function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
-typeEffect();
+function displayTasks() {
+    const taskList = document.getElementById("taskList");
+    taskList.innerHTML = "";
 
+    tasks.forEach((task, index) => {
+        const li = document.createElement("li");
 
-// ========================================
-// SCROLL REVEAL ANIMATION
-// ========================================
+        if (task.completed) {
+            li.classList.add("completed");
+        }
 
-const revealElements = document.querySelectorAll(
-    "section:not(.hero), .about-card, .skill-card"
-);
+        li.innerHTML = `
+            <span>${task.text}</span>
 
-const observer = new IntersectionObserver(
-    (entries) => {
+            <div class="task-buttons">
+                <button class="complete-btn" onclick="completeTask(${index})">
+                    ${task.completed ? "Undo" : "Done"}
+                </button>
 
-        entries.forEach((entry) => {
+                <button class="delete-btn" onclick="deleteTask(${index})">
+                    Delete
+                </button>
+            </div>
+        `;
 
-            if (entry.isIntersecting) {
-                entry.target.classList.add("show");
-            }
-
-        });
-
-    },
-    {
-        threshold: 0.15
-    }
-);
-
-revealElements.forEach((element) => {
-    element.classList.add("reveal");
-    observer.observe(element);
-});
-
-
-// ========================================
-// MOUSE GLOW EFFECT
-// ========================================
-
-const glow = document.createElement("div");
-
-glow.classList.add("mouse-glow");
-
-document.body.appendChild(glow);
-
-document.addEventListener("mousemove", (event) => {
-
-    glow.style.left = event.clientX + "px";
-    glow.style.top = event.clientY + "px";
-
-});
-// ========================================
-// MOBILE NAVIGATION
-// ========================================
-
-const menuToggle = document.querySelector(".menu-toggle");
-const navLinks = document.querySelector(".nav-links");
-
-menuToggle.addEventListener("click", () => {
-    navLinks.classList.toggle("show");
-
-    menuToggle.textContent =
-        navLinks.classList.contains("show") ? "✕" : "☰";
-});
-
-
-// Close menu after clicking a link
-
-document.querySelectorAll(".nav-links a").forEach(link => {
-
-    link.addEventListener("click", () => {
-
-        navLinks.classList.remove("show");
-
-        menuToggle.textContent = "☰";
-
+        taskList.appendChild(li);
     });
 
-});
+    updateCounter();
+}
+
+function addTask() {
+    const input = document.getElementById("taskInput");
+    const taskText = input.value.trim();
+
+    if (taskText === "") {
+        alert("Please enter a task!");
+        return;
+    }
+
+    tasks.push({
+        text: taskText,
+        completed: false
+    });
+
+    input.value = "";
+
+    saveTasks();
+    displayTasks();
+}
+
+function completeTask(index) {
+    tasks[index].completed = !tasks[index].completed;
+
+    saveTasks();
+    displayTasks();
+}
+
+function deleteTask(index) {
+    tasks.splice(index, 1);
+
+    saveTasks();
+    displayTasks();
+}
+
+function updateCounter() {
+    const total = tasks.length;
+    const completed = tasks.filter(task => task.completed).length;
+
+    document.getElementById("taskCounter").textContent =
+        `${total} tasks • ${completed} completed`;
+}
+
+displayTasks();
